@@ -107,3 +107,55 @@ jobs:
         run: gem push --host https://rubygems.pkg.github.com/${{ github.repository_owner }} *.gem
         env:
           GEM_HOST_API_KEY: "Bearer ${{ github.token }}"
+
+  publish-ruby-2-6-rubygems:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Ruby 2.6
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6.x
+
+      - name: Add lib/${{ env.NAME }}.rb
+        run: |
+          mkdir lib
+          cat > lib/${{ env.NAME }}.rb << EOM
+          class RubyGemsPublish
+            def self.hello
+              puts "Hello from ${{ github.repository }}!"
+            end
+          end
+          EOM
+      - name: Add ${{ env.NAME }}.gemspec
+        run: |
+          cat > ${{ env.NAME }}.gemspec << EOM
+          Gem::Specification.new do |s|
+              s.name        = '${{ env.NAME }}'
+              s.version     = '${{ env.VERSION }}'
+              s.files       = ["lib/${{ env.NAME }}.rb"]
+              s.metadata    = {
+                  "github_repo" => "https://github.com/${{ github.repository }}"
+              }
+              s.summary     = "This is a summary!"
+              s.authors     = ["Jamie Cansdale"]
+              s.licenses    = ['MIT']
+              s.homepage    = 'https://github.com/${{ github.repository }}'
+          end
+          EOM
+          
+      - name: Create ~/.gem/credentials
+        run: |
+          mkdir -p ~/.gem
+          cat > ~/.gem/credentials << EOM
+          ---
+          :rubygems_api_key: ${{ github.token }}
+          EOM
+          chmod 0600 ~/.gem/credentials
+      - name: Build .gem
+        run: gem build *.gemspec
+
+      - name: Publish .gem
+        run: gem push *.gem
