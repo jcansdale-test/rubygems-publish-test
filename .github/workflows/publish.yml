@@ -106,7 +106,7 @@ jobs:
       - name: Publish .gem
         run: gem push --host https://rubygems.pkg.github.com/${{ github.repository_owner }} *.gem
         env:
-          GEM_HOST_API_KEY: "Bearer ${{ github.token }}"
+          GEM_HOST_API_KEY: ${{ github.token }}
 
   publish-ruby-2-6-rubygems:
     runs-on: ubuntu-latest
