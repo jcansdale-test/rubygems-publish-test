@@ -151,9 +151,12 @@ jobs:
           mkdir -p ~/.gem
           cat > ~/.gem/credentials << EOM
           ---
-          :rubygems_api_key: ${{ github.token }}
+          :rubygems_api_key: ${GEM_HOST_API_KEY}
           EOM
           chmod 0600 ~/.gem/credentials
+        env:
+          GEM_HOST_API_KEY: "${{ secrets.RUBYGEMS_AUTH_TOKEN} }"
+
       - name: Build .gem
         run: gem build *.gemspec
 
